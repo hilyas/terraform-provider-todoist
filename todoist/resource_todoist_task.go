@@ -1,244 +1,159 @@
 package todoist
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type Task struct {
-	ID        string    `json:"id"`
-	ProjectID string    `json:"project_id"`
-	Content   string `json:"content"`
-	SectionID string `json:"section_id"`
-	Description string `json:"description"`
-	IsCompleted bool `json:"is_completed"`
-	Labels []string `json:"labels"`
-	Order int `json:"order"`
-	Priority int `json:"priority"`
-	Due struct {
-		String string `json:"string"`
-		Date string `json:"date"`
-		IsRecurring bool `json:"is_recurring"`
-		Datetime string `json:"datetime"`
-		Timezone string `json:"timezone"`
-	} `json:"due"`
-	Url string `json:"url"`
-	CommentCount int `json:"comment_count"`
-	CreatedAt string `json:"created_at"`
-	CreatorID string `json:"creator_id"`
-	AssigneeID string `json:"assignee_id"`
-	AssignerID string `json:"assigner_id"`
+	ID          string   `json:"id"`
+	Content     string   `json:"content"`
+	ProjectID   string   `json:"project_id"`
+	Description string   `json:"description"`
+	IsCompleted bool     `json:"is_completed"`
+	Labels      []string `json:"labels"`
+	Priority    int      `json:"priority"`
+	DueString   string   `json:"due_string"`
 }
 
 func ResourceTask() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTaskCreate,
-		Read:   resourceTaskRead,
-		Update: resourceTaskUpdate,
-		Delete: resourceTaskDelete,
+		Create: resourceTodoistTaskCreate,
+		Read:   resourceTodoistTaskRead,
+		Update: resourceTodoistTaskUpdate,
+		Delete: resourceTodoistTaskDelete,
+
 		Schema: map[string]*schema.Schema{
 			"content": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"project_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"section_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"description": {
-				Type:    schema.TypeString,
+				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"is_completed": {
-				Type:    schema.TypeBool,
+				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			"labels": {
-				Type:    schema.TypeList,
-				Elem:    &schema.Schema{Type: schema.TypeString},
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
-			},
-			"order": {
-				Type:    schema.TypeInt,
-				Computed: true,
 			},
 			"priority": {
-				Type:    schema.TypeInt,
+				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"due": {
-				Type:    schema.TypeList,
+			"due_string": {
+				Type:     schema.TypeString,
 				Optional: true,
-				MaxItems: 1,
-				Elem:   &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"string": {
-							Type: schema.TypeString,
-							Required: true,
-						},
-						"date": {
-							Type: schema.TypeString,
-							Required: true,
-						},
-						"is_recurring": {
-							Type: schema.TypeBool,
-							Required: true,
-						},
-						"datetime": {
-							Type: schema.TypeString,
-							Optional: true,
-						},
-						"timezone": {
-							Type: schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"url": {
-				Type:    schema.TypeString,
-				Computed: true,
-			},
-			"comment_count": {
-				Type:    schema.TypeInt,
-				Computed: true,
-			},
-			"created_at": {
-				Type:    schema.TypeString,
-				Computed: true,
-			},
-			"creator_id": {
-				Type:    schema.TypeString,
-				Computed: true,
-			},
-			"assignee_id": {
-				Type:    schema.TypeString,
-				Computed: true,
-			},
-			"assigner_id": {
-				Type:    schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
 }
 
-func resourceTaskCreate(d *schema.ResourceData, m interface{}) error {
+func resourceTodoistTaskCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*Client)
 
-	task := Task{
-		Content:   d.Get("content").(string),
-		ProjectID: d.Get("project_id").(string),
-	}
-	resp, err := client.resty.R().
-		SetHeader("Content-Type", "application/json").
-		SetBody(task).
-		Post("/tasks")
-
+	task, err := client.CreateTask(
+		d.Get("content").(string),
+		d.Get("project_id").(string),
+		d.Get("description").(string),
+		d.Get("is_completed").(bool),
+		expandLabels(d.Get("labels")),
+		d.Get("priority").(int),
+		d.Get("due_string").(string),
+	)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating Todoist task: %s", err)
 	}
 
-	var createdTask Task
-	err = json.Unmarshal(resp.Body(), &createdTask)
-	if err != nil {
-		return err
+	if task.ID == "" {
+		return fmt.Errorf("Error creating Todoist task: Task ID is empty")
 	}
+	d.SetId(task.ID)
 
-	d.SetId(createdTask.ID)
-	d.Set("content", createdTask.Content)
-	d.Set("project_id", createdTask.ProjectID)
-	d.Set("section_id", createdTask.SectionID)
-	d.Set("description", createdTask.Description)
-	d.Set("is_completed", createdTask.IsCompleted)
-	d.Set("labels", createdTask.Labels)
-	d.Set("order", createdTask.Order)
-	d.Set("priority", createdTask.Priority)
-	d.Set("due", createdTask.Due)
-	d.Set("url", createdTask.Url)
-	d.Set("comment_count", createdTask.CommentCount)
-	d.Set("created_at", createdTask.CreatedAt)
-	d.Set("creator_id", createdTask.CreatorID)
-	d.Set("assignee_id", createdTask.AssigneeID)
-	d.Set("assigner_id", createdTask.AssignerID)
-
-	return resourceTaskRead(d, m)
+	return resourceTodoistTaskRead(d, m)
 }
 
-func resourceTaskRead(d *schema.ResourceData, m interface{}) error {
+func resourceTodoistTaskRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*Client)
 
-	taskID := d.Id()
-	resp, err := client.resty.R().Get(fmt.Sprintf("/tasks/%s", taskID))
+	task, err := client.GetTask(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("Error reading Todoist task: %s", err)
 	}
 
-	var task Task
-	err = json.Unmarshal(resp.Body(), &task)
-	if err != nil {
-		return err
-	}
-
-	d.SetId(fmt.Sprintf("%s", task.ID))
 	d.Set("content", task.Content)
 	d.Set("project_id", task.ProjectID)
-	d.Set("section_id", task.SectionID)
 	d.Set("description", task.Description)
 	d.Set("is_completed", task.IsCompleted)
-	d.Set("labels", task.Labels)
-	d.Set("order", task.Order)
+	d.Set("labels", flattenLabels(task.Labels))
 	d.Set("priority", task.Priority)
-	d.Set("due", task.Due)
-	d.Set("url", task.Url)
-	d.Set("comment_count", task.CommentCount)
-	d.Set("created_at", task.CreatedAt)
-	d.Set("creator_id", task.CreatorID)
-	d.Set("assignee_id", task.AssigneeID)
-	d.Set("assigner_id", task.AssignerID)
+	d.Set("due_string", task.DueString)
 
 	return nil
 }
 
-func resourceTaskUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceTodoistTaskUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*Client)
 
-	taskID := d.Id()
-	task := Task{
-		ID:        taskID,
-		Content:   d.Get("content").(string),
-		ProjectID: d.Get("project_id").(string),
-	}
-	_, err := client.resty.R().
-		SetHeader("Content-Type", "application/json").
-		SetBody(task).
-		Post(fmt.Sprintf("/tasks/%s", taskID))
-
+	task, err := client.UpdateTask(
+		d.Id(),
+		d.Get("content").(string),
+		d.Get("project_id").(string),
+		d.Get("description").(string),
+		d.Get("is_completed").(bool),
+		expandLabels(d.Get("labels")),
+		d.Get("priority").(int),
+		d.Get("due_string").(string),
+	)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error updating Todoist task: %s", err)
 	}
 
-	return resourceTaskRead(d, m)
+	if task.ID == "" {
+		return fmt.Errorf("Error updating Todoist task: Task ID is empty")
+	}
+	d.SetId(task.ID)
+
+	return resourceTodoistTaskRead(d, m)
 }
 
-func resourceTaskDelete(d *schema.ResourceData, m interface{}) error {
+func resourceTodoistTaskDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*Client)
 
-	taskID := d.Id()
-	_, err := client.resty.R().
-		Delete(fmt.Sprintf("/tasks/%s", taskID))
-
+	err := client.DeleteTask(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("Error deleting Todoist task: %s", err)
 	}
 
-	d.SetId("")
-
 	return nil
+}
+
+func expandLabels(labels interface{}) []string {
+	labelList := labels.([]interface{})
+	expandedLabels := make([]string, len(labelList))
+
+	for i, label := range labelList {
+		expandedLabels[i] = label.(string)
+	}
+
+	return expandedLabels
+}
+
+func flattenLabels(labels []string) []interface{} {
+	flattened := make([]interface{}, len(labels))
+
+	for i, label := range labels {
+		flattened[i] = label
+	}
+
+	return flattened
 }

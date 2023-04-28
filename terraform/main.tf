@@ -16,13 +16,12 @@ provider "todoist" {
 ##################################################
 
 data "todoist_project" "example_project" {
-  project_id = "2312101643"
+  project_id = "2312101643" 
 }
 
 data "todoist_task" "example_task" {
-  task_id = "6831856424"
+  task_id = "6832860121"
 }
-
 
 ##################################################
 # Resources                                      #
@@ -37,19 +36,13 @@ resource "todoist_project" "example_project" {
 }
 
 resource "todoist_task" "example_task" {
+  project_id = todoist_project.example_project.id
   content      = "Example Task"
-  section_id   = ""
   description  = "This is an example task"
   is_completed = false
-  labels       = ["urgent", "important"]
-  priority     = 1
-  due {
-    string       = "2023-12-31"
-    date         = "2023-12-31"
-    is_recurring = false
-    datetime     = "2023-09-01T12:00:00.000000Z"
-    timezone     = "Europe/London"
-  }
+  labels       = ["urgent", "important", "work"]
+  priority     = 2
+  due_string = "every Friday at 12:00"
 }
 
 ##################################################
@@ -72,20 +65,9 @@ output "task_info" {
     id            = data.todoist_task.example_task.id
     content       = data.todoist_task.example_task.content
     project_id    = data.todoist_task.example_task.project_id
-    section_id    = data.todoist_task.example_task.section_id
     description   = data.todoist_task.example_task.description
     is_completed  = data.todoist_task.example_task.is_completed
     labels        = data.todoist_task.example_task.labels
-    order         = data.todoist_task.example_task.order
     priority      = data.todoist_task.example_task.priority
-    due           = data.todoist_task.example_task.due
-    url           = data.todoist_task.example_task.url
-    comment_count = data.todoist_task.example_task.comment_count
-    created_at    = data.todoist_task.example_task.created_at
-    creator_id    = data.todoist_task.example_task.creator_id
-    assignee_id   = data.todoist_task.example_task.assignee_id
-    assigner_id   = data.todoist_task.example_task.assigner_id
   }
 }
-
-
