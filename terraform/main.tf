@@ -15,13 +15,13 @@ provider "todoist" {
 # Data Sources                                   #
 ##################################################
 
-# data "todoist_project" "example_project" {
-#   project_id = "2312101643"
-# }
+data "todoist_project" "example_project" {
+  project_id = "2312101643" 
+}
 
-# data "todoist_task" "example_task" {
-#   task_id = "6831856424"
-# }
+data "todoist_task" "example_task" {
+  task_id = "6832860121"
+}
 
 ##################################################
 # Resources                                      #
@@ -36,47 +36,38 @@ resource "todoist_project" "example_project" {
 }
 
 resource "todoist_task" "example_task" {
+  project_id = todoist_project.example_project.id
   content      = "Example Task"
-  # section_id   = ""
   description  = "This is an example task"
   is_completed = false
-  labels       = ["urgent", "important"]
-  priority     = 1
-  project_id = todoist_project.example_project.id
-  # due {
-  #   string       = "2023-12-31"
-  #   date         = "2023-12-31"
-  #   is_recurring = false
-  #   datetime     = "2023-09-01T12:00:00.000000Z"
-  #   timezone     = "Europe/London"
-  # }
+  labels       = ["urgent", "important", "work"]
+  priority     = 2
+  due_string = "every Friday at 12:00"
 }
 
 ##################################################
 # Outputs                                        #
 ##################################################
 
-# output "project_info" {
-#   value = {
-#     id          = data.todoist_project.example_project.id
-#     name        = data.todoist_project.example_project.name
-#     parent_id   = data.todoist_project.example_project.parent_id
-#     color       = data.todoist_project.example_project.color
-#     is_favorite = data.todoist_project.example_project.is_favorite
-#     view_style  = data.todoist_project.example_project.view_style
-#   }
-# }
+output "project_info" {
+  value = {
+    id          = data.todoist_project.example_project.id
+    name        = data.todoist_project.example_project.name
+    parent_id   = data.todoist_project.example_project.parent_id
+    color       = data.todoist_project.example_project.color
+    is_favorite = data.todoist_project.example_project.is_favorite
+    view_style  = data.todoist_project.example_project.view_style
+  }
+}
 
-# output "task_info" {
-#   value = {
-#     id            = data.todoist_task.example_task.id
-#     content       = data.todoist_task.example_task.content
-#     project_id    = data.todoist_task.example_task.project_id
-#     section_id    = data.todoist_task.example_task.section_id
-#     description   = data.todoist_task.example_task.description
-#     is_completed  = data.todoist_task.example_task.is_completed
-#     labels        = data.todoist_task.example_task.labels
-#     priority      = data.todoist_task.example_task.priority
-#     # due           = data.todoist_task.example_task.due
-#   }
-# }
+output "task_info" {
+  value = {
+    id            = data.todoist_task.example_task.id
+    content       = data.todoist_task.example_task.content
+    project_id    = data.todoist_task.example_task.project_id
+    description   = data.todoist_task.example_task.description
+    is_completed  = data.todoist_task.example_task.is_completed
+    labels        = data.todoist_task.example_task.labels
+    priority      = data.todoist_task.example_task.priority
+  }
+}

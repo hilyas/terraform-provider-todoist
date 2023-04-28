@@ -5,6 +5,6 @@ provider "hilyas.com/hilyas/todoist" {
   version     = "0.1.0"
   constraints = "0.1.0"
   hashes = [
-    "h1:AO6kK5Wfi6TDvVWjrHDTuN7c7WUMiKThuDNFuWvLnic=",
+    "h1:8I7XFWcyk+yXc4oSi71DC3sJXU6uF7ueWYLaCByxQtk=",
   ]
 }

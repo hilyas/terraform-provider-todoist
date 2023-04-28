@@ -88,17 +88,15 @@ func (c *Client) DeleteProject(projectID string) error {
 	return err
 }
 
-// func (c *Client) CreateTask(content, projectID, sectionID, description string, isCompleted bool, labels []string, priority int, due *Due) (*Task, error) {
-func (c *Client) CreateTask(content, projectID, description string, isCompleted bool, labels []string, priority int) (*Task, error) {
+func (c *Client) CreateTask(content, projectID, description string, isCompleted bool, labels []string, priority int, dueString string) (*Task, error) {
 	taskData := &Task{
 		Content:     content,
 		ProjectID:   projectID,
-		// SectionID:   sectionID,
 		Description: description,
 		IsCompleted: isCompleted,
 		Labels:      labels,
 		Priority:    priority,
-		// Due:         due,
+		DueString: dueString,
 	}
 
 	resp, err := c.resty.R().SetBody(taskData).Post("/tasks")
@@ -130,17 +128,15 @@ func (c *Client) GetTask(taskID string) (*Task, error) {
 	return &task, nil
 }
 
-// func (c *Client) UpdateTask(taskID, content, projectID, sectionID, description string, isCompleted bool, labels []string, priority int, due *Due) (*Task, error) {
-func (c *Client) UpdateTask(taskID, content, projectID, description string, isCompleted bool, labels []string, priority int) (*Task, error) {
+func (c *Client) UpdateTask(taskID, content, projectID, description string, isCompleted bool, labels []string, priority int, dueString string) (*Task, error) {
 	taskData := &Task{
 		Content:     content,
 		ProjectID:   projectID,
-		// SectionID:   sectionID,
 		Description: description,
 		IsCompleted: isCompleted,
 		Labels:      labels,
 		Priority:    priority,
-		// Due:         due,
+		DueString: 	dueString,
 	}
 
 	resp, err := c.resty.R().SetBody(taskData).Post("/tasks/" + taskID)
