@@ -96,7 +96,7 @@ func (c *Client) CreateTask(content, projectID, description string, isCompleted 
 		IsCompleted: isCompleted,
 		Labels:      labels,
 		Priority:    priority,
-		DueString: dueString,
+		DueString:   dueString,
 	}
 
 	resp, err := c.resty.R().SetBody(taskData).Post("/tasks")
@@ -136,7 +136,7 @@ func (c *Client) UpdateTask(taskID, content, projectID, description string, isCo
 		IsCompleted: isCompleted,
 		Labels:      labels,
 		Priority:    priority,
-		DueString: 	dueString,
+		DueString:   dueString,
 	}
 
 	resp, err := c.resty.R().SetBody(taskData).Post("/tasks/" + taskID)

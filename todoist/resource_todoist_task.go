@@ -14,9 +14,8 @@ type Task struct {
 	IsCompleted bool     `json:"is_completed"`
 	Labels      []string `json:"labels"`
 	Priority    int      `json:"priority"`
-	DueString  string   `json:"due_string"`
+	DueString   string   `json:"due_string"`
 }
-
 
 func ResourceTask() *schema.Resource {
 	return &schema.Resource{
@@ -76,8 +75,8 @@ func resourceTodoistTaskCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if task.ID == "" {
-        return fmt.Errorf("Error creating Todoist task: Task ID is empty")
-    }
+		return fmt.Errorf("Error creating Todoist task: Task ID is empty")
+	}
 	d.SetId(task.ID)
 
 	return resourceTodoistTaskRead(d, m)
@@ -120,8 +119,8 @@ func resourceTodoistTaskUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if task.ID == "" {
-        return fmt.Errorf("Error updating Todoist task: Task ID is empty")
-    }
+		return fmt.Errorf("Error updating Todoist task: Task ID is empty")
+	}
 	d.SetId(task.ID)
 
 	return resourceTodoistTaskRead(d, m)
