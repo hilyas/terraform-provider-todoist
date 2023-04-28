@@ -11,7 +11,10 @@ import (
 type Project struct {
 	ID   string  `json:"id"`
 	Name string `json:"name"`
-	
+	ParentID string `json:"parent_id"`
+	Color string `json:"color"`
+	IsFavorite bool `json:"is_favorite"`
+	ViewStyle string `json:"view_style"`
 }
 
 func ResourceProject() *schema.Resource {
@@ -25,6 +28,22 @@ func ResourceProject() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"parent_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"color": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"is_favorite": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"view_style": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -32,7 +51,13 @@ func ResourceProject() *schema.Resource {
 func resourceProjectCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*Client)
 
-	project := Project{Name: d.Get("name").(string)}
+	project := Project{
+		Name: d.Get("name").(string),
+		ParentID: d.Get("parent_id").(string),
+		Color: d.Get("color").(string),
+		IsFavorite: d.Get("is_favorite").(bool),
+		ViewStyle: d.Get("view_style").(string),
+	}
 	resp, err := client.resty.R().
 		SetHeader("Content-Type", "application/json").
 		SetBody(project).
@@ -51,7 +76,12 @@ func resourceProjectCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.SetId(createdProject.ID)
-
+	d.Set("name", createdProject.Name)
+	d.Set("parent_id", createdProject.ParentID)
+	d.Set("color", createdProject.Color)
+	d.Set("is_favorite", createdProject.IsFavorite)
+	d.Set("view_style", createdProject.ViewStyle)
+	
 	return resourceProjectRead(d, m)
 }
 
@@ -70,6 +100,10 @@ func resourceProjectRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.Set("name", project.Name)
+	d.Set("parent_id", project.ParentID)
+	d.Set("color", project.Color)
+	d.Set("is_favorite", project.IsFavorite)
+	d.Set("view_style", project.ViewStyle)
 
 	return nil
 }
@@ -77,7 +111,13 @@ func resourceProjectRead(d *schema.ResourceData, m interface{}) error {
 func resourceProjectUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*Client)
 
-	project := Project{Name: d.Get("name").(string)}
+	project := Project{
+		Name: d.Get("name").(string),
+		ParentID: d.Get("parent_id").(string),
+		Color: d.Get("color").(string),
+		IsFavorite: d.Get("is_favorite").(bool),
+		ViewStyle: d.Get("view_style").(string),
+	}
 	resp, err := client.resty.R().
 		SetHeader("Content-Type", "application/json").
 		SetBody(project).

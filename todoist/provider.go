@@ -19,9 +19,11 @@ func Provider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"todoist_project": ResourceProject(),
+			"todoist_task":    ResourceTask(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"todoist_project": DataSourceProject(),
+			"todoist_task":    DataSourceTask(),
 		},
 		ConfigureContextFunc: configureProvider,
 	}
