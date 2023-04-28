@@ -1,20 +1,16 @@
 package todoist
 
 import (
-	"encoding/json"
-	"log"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// Add the Project struct
 type Project struct {
-	ID   string  `json:"id"`
-	Name string `json:"name"`
-	ParentID string `json:"parent_id"`
-	Color string `json:"color"`
-	IsFavorite bool `json:"is_favorite"`
-	ViewStyle string `json:"view_style"`
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	ParentID   string `json:"parent_id"`
+	Color      string `json:"color"`
+	IsFavorite bool   `json:"is_favorite"`
+	ViewStyle  string `json:"view_style"`
 }
 
 func ResourceProject() *schema.Resource {
@@ -51,50 +47,25 @@ func ResourceProject() *schema.Resource {
 func resourceProjectCreate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*Client)
 
-	project := Project{
-		Name: d.Get("name").(string),
-		ParentID: d.Get("parent_id").(string),
-		Color: d.Get("color").(string),
-		IsFavorite: d.Get("is_favorite").(bool),
-		ViewStyle: d.Get("view_style").(string),
-	}
-	resp, err := client.resty.R().
-		SetHeader("Content-Type", "application/json").
-		SetBody(project).
-		Post("/projects")
+	name := d.Get("name").(string)
+	parentID := d.Get("parent_id").(string)
+	color := d.Get("color").(string)
+	isFavorite := d.Get("is_favorite").(bool)
+	viewStyle := d.Get("view_style").(string)
 
+	project, err := client.CreateProject(name, parentID, color, isFavorite, viewStyle)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[DEBUG] Read response body: %s", resp.Body())
-
-	var createdProject Project
-	err = json.Unmarshal(resp.Body(), &createdProject)
-	if err != nil {
-		return err
-	}
-
-	d.SetId(createdProject.ID)
-	d.Set("name", createdProject.Name)
-	d.Set("parent_id", createdProject.ParentID)
-	d.Set("color", createdProject.Color)
-	d.Set("is_favorite", createdProject.IsFavorite)
-	d.Set("view_style", createdProject.ViewStyle)
-	
+	d.SetId(project.ID)
 	return resourceProjectRead(d, m)
 }
 
 func resourceProjectRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*Client)
 
-	resp, err := client.resty.R().Get("/projects/" + d.Id())
-	if err != nil {
-		return err
-	}
-
-	var project Project
-	err = json.Unmarshal(resp.Body(), &project)
+	project, err := client.GetProject(d.Id())
 	if err != nil {
 		return err
 	}
@@ -111,37 +82,28 @@ func resourceProjectRead(d *schema.ResourceData, m interface{}) error {
 func resourceProjectUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*Client)
 
-	project := Project{
-		Name: d.Get("name").(string),
-		ParentID: d.Get("parent_id").(string),
-		Color: d.Get("color").(string),
-		IsFavorite: d.Get("is_favorite").(bool),
-		ViewStyle: d.Get("view_style").(string),
-	}
-	resp, err := client.resty.R().
-		SetHeader("Content-Type", "application/json").
-		SetBody(project).
-		Post("/projects/" + d.Id())
+	name := d.Get("name").(string)
+	parentID := d.Get("parent_id").(string)
+	color := d.Get("color").(string)
+	isFavorite := d.Get("is_favorite").(bool)
+	viewStyle := d.Get("view_style").(string)
 
+	_, err := client.UpdateProject(d.Id(), name, parentID, color, isFavorite, viewStyle)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[DEBUG] Update response body: %s", resp.Body())
-
 	return resourceProjectRead(d, m)
 }
-
 
 func resourceProjectDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*Client)
 
-	_, err := client.resty.R().Delete("/projects/" + d.Id())
+	err := client.DeleteProject(d.Id())
 	if err != nil {
 		return err
 	}
 
 	d.SetId("")
-
 	return nil
 }

@@ -1,7 +1,6 @@
 package todoist
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -43,13 +42,7 @@ func dataSourceProjectRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*Client)
 
 	projectID := d.Get("project_id").(string)
-	resp, err := client.resty.R().Get(fmt.Sprintf("/projects/%s", projectID))
-	if err != nil {
-		return err
-	}
-
-	var project Project
-	err = json.Unmarshal(resp.Body(), &project)
+	project, err := client.GetProject(projectID)
 	if err != nil {
 		return err
 	}
